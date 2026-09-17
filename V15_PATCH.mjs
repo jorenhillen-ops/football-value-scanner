@@ -12,9 +12,10 @@ function version(){
 function atLeast15(){return Number(String(version()).split('.')[0]||0)>=15}
 function readParts(prefix){
   const dir=path.join(ROOT,'release');
+  if(!fs.existsSync(dir))return '';
   return fs.readdirSync(dir).filter(x=>x.startsWith(prefix)&&x.endsWith('.b64')).sort().map(x=>fs.readFileSync(path.join(dir,x),'utf8').trim()).join('');
 }
-function gunzipB64(s){return zlib.gunzipSync(Buffer.from(s,'base64')).toString('utf8')}
+function decodeB64(s){return zlib.brotliDecompressSync(Buffer.from(s,'base64')).toString('utf8')}
 function ensureDir(file){fs.mkdirSync(path.dirname(file),{recursive:true})}
 function parseHeaderPath(line){
   const raw=line.slice(4).split('\t')[0].trim();
@@ -61,7 +62,7 @@ function applyUnifiedPatch(patchText){
 export function restoreV15Index(){
   const b64=readParts('v15_index_');
   if(!b64)throw new Error('V15 index payload ontbreekt');
-  const code=gunzipB64(b64);
+  const code=decodeB64(b64);
   const target=path.join(ROOT,'server','index.mjs');
   ensureDir(target);fs.writeFileSync(target,code,'utf8');
 }
@@ -69,7 +70,7 @@ export function applyV15(){
   if(!atLeast15()){
     const b64=readParts('v15_patch_');
     if(!b64)throw new Error('V15 patch payload ontbreekt');
-    applyUnifiedPatch(gunzipB64(b64));
+    applyUnifiedPatch(decodeB64(b64));
   }
   restoreV15Index();
 }
