@@ -5,11 +5,8 @@ import {fileURLToPath} from 'node:url';
 
 const ROOT=path.dirname(fileURLToPath(import.meta.url));
 const rel=p=>path.join(ROOT,p.replace(/^b\//,''));
+const MARKER=path.join(ROOT,'.v15-applied');
 
-function version(){
-  try{return JSON.parse(fs.readFileSync(path.join(ROOT,'VERSION.json'),'utf8')).version||'0';}catch{return '0';}
-}
-function atLeast15(){return Number(String(version()).split('.')[0]||0)>=15}
 function readParts(prefix){
   const dir=path.join(ROOT,'release');
   if(!fs.existsSync(dir))return '';
@@ -67,10 +64,11 @@ export function restoreV15Index(){
   ensureDir(target);fs.writeFileSync(target,code,'utf8');
 }
 export function applyV15(){
-  if(!atLeast15()){
+  if(!fs.existsSync(MARKER)){
     const b64=readParts('v15_patch_');
     if(!b64)throw new Error('V15 patch payload ontbreekt');
     applyUnifiedPatch(decodeB64(b64));
+    fs.writeFileSync(MARKER,new Date().toISOString(),'utf8');
   }
   restoreV15Index();
 }
