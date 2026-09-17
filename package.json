@@ -1,0 +1,14 @@
+{
+  "name": "football-value-scanner-v14-1-more-bets-verified-logos",
+  "version": "14.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.mjs"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
