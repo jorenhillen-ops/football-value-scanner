@@ -1,0 +1,7 @@
+{
+  "refreshMinutes": 240,
+  "useFreeFallback": true,
+  "scanDays": 2,
+  "sportmonksToken": "",
+  "oddsPapiKey": ""
+}
