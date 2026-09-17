@@ -1,0 +1,14 @@
+node_modules/
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# Local runtime data and private API keys
+data/*.json
+!data/settings.example.json
+!data/.gitkeep
+
+# Temporary updater files
+.update-temp/
+*.tmp
