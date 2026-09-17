@@ -1,0 +1,10 @@
+FOOTBALL VALUE SCANNER - LIVE INSTALLATIE
+
+1. Dubbelklik op START_FOOTBALL_VALUE_SCANNER.bat
+2. Bij iedere start wordt automatisch gecontroleerd op nieuwe code op GitHub.
+3. Je lokale data, bankroll, gespeelde bets, caches en API-sleutels blijven lokaal in de map data.
+4. De server vernieuwt voetbaldata daarna automatisch volgens de ingestelde refresh-interval.
+5. Wil je meteen opnieuw controleren? Dubbelklik op CHECK_UPDATE.bat.
+
+Repository:
+https://github.com/jorenhillen-ops/football-value-scanner
