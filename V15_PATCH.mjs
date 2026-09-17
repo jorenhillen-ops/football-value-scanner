@@ -6,6 +6,7 @@ import {fileURLToPath} from 'node:url';
 const ROOT=path.dirname(fileURLToPath(import.meta.url));
 const rel=p=>path.join(ROOT,p.replace(/^b\//,''));
 const MARKER=path.join(ROOT,'.v15-applied');
+const SKIP_PATCH=new Set(['README.md','START_HIER.txt']);
 
 function readParts(prefix){
   const dir=path.join(ROOT,'release');
@@ -27,6 +28,12 @@ function applyUnifiedPatch(patchText){
     if(i>=lines.length||!lines[i].startsWith('+++ '))throw new Error('Ongeldige patch-header');
     const newPath=parseHeaderPath(lines[i++]);
     const target=newPath==='/dev/null'?oldPath:newPath;
+
+    if(SKIP_PATCH.has(target)){
+      while(i<lines.length&&!lines[i].startsWith('--- '))i++;
+      continue;
+    }
+
     const file=rel(target);
     let source=[];
     if(oldPath!=='/dev/null'&&fs.existsSync(file))source=fs.readFileSync(file,'utf8').replace(/\r\n/g,'\n').split('\n');
