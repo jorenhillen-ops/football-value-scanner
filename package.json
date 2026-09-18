@@ -1,9 +1,10 @@
 {
-  "name": "football-value-scanner-v14-1-more-bets-verified-logos",
-  "version": "14.1.0",
+  "name": "football-value-scanner-v15-adaptive-player-engine",
+  "version": "15.0.1",
   "type": "module",
   "scripts": {
-    "start": "node server/index.mjs"
+    "start": "node server/index.mjs",
+    "prepare:v15": "node BOOTSTRAP_V15.mjs --prepare --force"
   },
   "dependencies": {
     "express": "^5.1.0"
