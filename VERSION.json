@@ -1,5 +1,7 @@
 {
-  "version": "14.1-live",
+  "version": "15.0.1",
   "channel": "main",
-  "repository": "jorenhillen-ops/football-value-scanner"
+  "repository": "jorenhillen-ops/football-value-scanner",
+  "model": "V15 Adaptive Player Engine",
+  "runtime": "snapshot-recovery"
 }
