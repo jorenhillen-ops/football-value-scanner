@@ -9,13 +9,19 @@ const RELEASE_DIR=path.join(ROOT,'release');
 const MARKER=path.join(ROOT,'.v15-runtime.json');
 const EXPECTED_SHA='e2f74054d76abc19be9f3fd94e6f9928e3a639d1aabcd0d5587fd0e20946d068';
 const EXPECTED_VERSION='15.0.1';
+const REQUIRED_FILES=[
+  'public/app.js','public/index.html','public/style.css',
+  'server/model.mjs','server/ml.mjs','server/refresh.mjs','server/storage.mjs',
+  'server/providers/oddspapi.mjs','server/providers/sportmonks_history.mjs','server/providers/sportmonks.mjs',
+  'server/providers/footballdata.mjs','server/providers/thesportsdb.mjs','server/providers/teamlogos.mjs',
+  'server/app.v15.mjs'
+];
 
 function readMarker(){
   try{return JSON.parse(fs.readFileSync(MARKER,'utf8'));}catch{return null}
 }
 function requiredFilesPresent(){
-  return ['server/app.v15.mjs','server/model.mjs','server/ml.mjs','server/refresh.mjs','public/app.js','public/index.html','public/style.css']
-    .every(p=>fs.existsSync(path.join(ROOT,p)));
+  return REQUIRED_FILES.every(p=>fs.existsSync(path.join(ROOT,p)));
 }
 function readPayload(){
   if(!fs.existsSync(RELEASE_DIR))throw new Error('V15 release-map ontbreekt. Voer CHECK_UPDATE.bat uit en probeer opnieuw.');
@@ -48,6 +54,9 @@ export function prepareV15Runtime({force=false}={}){
   }
   const payload=readPayload();
   if(payload?.version!==EXPECTED_VERSION||!payload?.files)throw new Error('V15 runtime-manifest heeft een onverwachte versie.');
+  for(const required of REQUIRED_FILES){
+    if(typeof payload.files[required]!=='string')throw new Error(`V15 runtime-bestand ontbreekt in manifest: ${required}`);
+  }
   let written=0;
   for(const [rel,content] of Object.entries(payload.files)){
     if(typeof content!=='string')continue;
