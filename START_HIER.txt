@@ -1,10 +1,13 @@
-FOOTBALL VALUE SCANNER - LIVE INSTALLATIE
+FOOTBALL VALUE SCANNER V15.0.1 — ADAPTIVE PLAYER ENGINE
 
 1. Dubbelklik op START_FOOTBALL_VALUE_SCANNER.bat
-2. Bij iedere start wordt automatisch gecontroleerd op nieuwe code op GitHub.
-3. Je lokale data, bankroll, gespeelde bets, caches en API-sleutels blijven lokaal in de map data.
-4. De server vernieuwt voetbaldata daarna automatisch volgens de ingestelde refresh-interval.
-5. Wil je meteen opnieuw controleren? Dubbelklik op CHECK_UPDATE.bat.
+2. De updater controleert automatisch GitHub.
+3. Wacht tot de browser opent op http://localhost:3106
+4. Ga naar DATA om Sportmonks/OddsPapi te controleren.
+5. Ga naar Clubs & Data en gebruik Spelers sync voor beschikbare squads.
 
-Repository:
-https://github.com/jorenhillen-ops/football-value-scanner
+BELANGRIJK:
+- data/ wordt bij code-updates niet overschreven.
+- API-keys, caches en lokale modeldata blijven behouden.
+- Spelers/opstellingen/blessures worden alleen getoond als de databron ze werkelijk levert; ontbrekende data wordt niet geraden.
+- Als V15 niet start, blijft het venster 'Football Value Scanner V15 SERVER' open met de exacte foutmelding.
