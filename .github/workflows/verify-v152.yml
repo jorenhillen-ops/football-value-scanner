@@ -1,0 +1,58 @@
+name: Verify V15.2
+
+on:
+  push:
+    branches: [v15-2-operational]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify runtime snapshot
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import zlib from 'node:zlib';
+          import crypto from 'node:crypto';
+          const parts=fs.readdirSync('release').filter(x=>/^v152_runtime_\d+[.]b64$/.test(x)).sort();
+          if(parts.length!==7) throw new Error(`Expected 7 V15.2 parts, got ${parts.length}`);
+          const raw=zlib.brotliDecompressSync(Buffer.from(parts.map(x=>fs.readFileSync('release/'+x,'utf8').trim()).join(''),'base64'));
+          const sha=crypto.createHash('sha256').update(raw).digest('hex');
+          console.log('runtime sha256',sha);
+          if(sha!=='830227b87fd9a89a0fa2d85cdfb9ce35a8bbc6300ca8273c762b0ef61f763088') throw new Error('Unexpected V15.2 runtime checksum');
+          const payload=JSON.parse(raw.toString('utf8'));
+          if(payload.version!=='15.2.0') throw new Error('Wrong runtime version');
+          if(Object.keys(payload.files||{}).length!==14) throw new Error('Runtime file count mismatch');
+          NODE
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Prepare V15.2 runtime
+        run: node BOOTSTRAP_V15.mjs --prepare --force
+      - name: Syntax checks
+        run: |
+          node --check server/index.mjs
+          node --check server/app.v15.mjs
+          node --check server/model.mjs
+          node --check server/ml.mjs
+          node --check server/refresh.mjs
+          node --check server/providers/sportmonks.mjs
+          node --check public/app.js
+      - name: Smoke-test server and health endpoint
+        run: |
+          PORT=3106 node server/index.mjs > server.log 2>&1 &
+          PID=$!
+          ok=0
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:3106/health > health.json; then ok=1; break; fi
+            sleep 0.5
+          done
+          cat server.log || true
+          cat health.json || true
+          kill $PID || true
+          test "$ok" = "1"
