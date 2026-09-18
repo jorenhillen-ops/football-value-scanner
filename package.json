@@ -1,6 +1,6 @@
 {
-  "name": "football-value-scanner-v15-adaptive-player-engine",
-  "version": "15.0.1",
+  "name": "football-value-scanner-v15-2-multipage-club-settlement",
+  "version": "15.2.0",
   "type": "module",
   "scripts": {
     "start": "node server/index.mjs",
