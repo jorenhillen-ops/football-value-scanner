@@ -1,6 +1,6 @@
 {
-  "name": "football-value-scanner-v15-6-adaptive-quality",
-  "version": "15.6.0",
+  "name": "football-value-scanner-v15-7",
+  "version": "15.7.0",
   "type": "module",
   "scripts": {
     "start": "node server/index.mjs",
@@ -8,7 +8,8 @@
     "apply:pwa": "node PWA_PATCH.mjs --apply",
     "apply:v15.4": "node V15_4_PATCH.mjs --apply",
     "apply:v15.5": "node V15_5_PATCH.mjs --apply",
-    "apply:v15.6": "node V15_6_PATCH.mjs --apply"
+    "apply:v15.6": "node V15_6_PATCH.mjs --apply",
+    "apply:v15.7": "node V15_7_PATCH.mjs --apply"
   },
   "dependencies": {
     "express": "^5.1.0"
