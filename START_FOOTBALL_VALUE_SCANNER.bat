@@ -1,6 +1,6 @@
 @echo off
 setlocal
-title Football Value Scanner V15.3
+title Football Value Scanner V15.4
 cd /d "%~dp0"
 
 if not exist "data" mkdir "data"
@@ -42,15 +42,16 @@ if not exist "node_modules\express\package.json" (
   )
 )
 
-REM 4) Start server in een zichtbaar venster zodat een foutmelding niet verdwijnt.
+REM 4) Start server zichtbaar en LAN-ready voor de iPhone-webapp.
 set PORT=3106
-start "Football Value Scanner V15.3 SERVER" cmd /k "cd /d ""%~dp0"" && set PORT=3106 && npm start"
+set HOST=0.0.0.0
+start "Football Value Scanner V15.4 SERVER" cmd /k "cd /d ""%~dp0"" && set PORT=3106 && set HOST=0.0.0.0 && npm start"
 
-echo Wachten tot V15.3 klaar is op http://localhost:3106 ...
-powershell -NoProfile -Command "$ok=$false; for($i=0;$i -lt 40;$i++){ try { $r=Invoke-WebRequest -UseBasicParsing -Uri 'http://localhost:3106/health' -TimeoutSec 1; if($r.StatusCode -eq 200){$ok=$true;break} } catch {}; Start-Sleep -Milliseconds 500 }; if($ok){exit 0}else{exit 1}"
+echo Wachten tot V15.4 klaar is op http://localhost:3106 ...
+powershell -NoProfile -Command "$ok=$false; for($i=0;$i -lt 50;$i++){ try { $r=Invoke-WebRequest -UseBasicParsing -Uri 'http://localhost:3106/health' -TimeoutSec 1; if($r.StatusCode -eq 200){$ok=$true;break} } catch {}; Start-Sleep -Milliseconds 500 }; if($ok){exit 0}else{exit 1}"
 if errorlevel 1 (
   echo.
-  echo V15.3 reageert nog niet. Kijk in het venster 'Football Value Scanner V15.3 SERVER' voor de exacte fout.
+  echo V15.4 reageert nog niet. Kijk in het venster 'Football Value Scanner V15.4 SERVER' voor de exacte fout.
   echo Je lokale data en API-keys zijn niet verwijderd.
   pause
   exit /b 1
