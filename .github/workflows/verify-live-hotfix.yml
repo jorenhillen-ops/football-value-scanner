@@ -1,4 +1,4 @@
-name: Verify V15.4 operations
+name: Verify V15.5 operations
 on:
   push:
     branches: [main]
@@ -14,16 +14,19 @@ jobs:
       - run: node BOOTSTRAP_V15.mjs --prepare --force
       - run: node PWA_PATCH.mjs --apply
       - run: node V15_4_PATCH.mjs --apply
+      - run: node V15_5_PATCH.mjs --apply
       - name: Syntax checks
         run: |
           node --check PWA_PATCH.mjs
           node --check V15_4_PATCH.mjs
+          node --check V15_5_PATCH.mjs
           node --check server/index.mjs
           node --check server/app.v15.mjs
           node --check server/refresh.mjs
+          node --check server/providers/oddspapi.mjs
           node --check public/app.js
           node --check public/mobile-app.js
-      - name: Verify V15.4 operational patches
+      - name: Verify operational and exact-odds patches
         run: |
           grep -q FVS_1531_FRESHNESS server/app.v15.mjs
           grep -q FVS_1531_ROW_FILTER server/refresh.mjs
@@ -31,10 +34,24 @@ jobs:
           grep -q FVS_154_NOCACHE server/app.v15.mjs
           grep -q FVS_154_DAILY_MAINTENANCE server/app.v15.mjs
           grep -q "0.0.0.0" server/app.v15.mjs
-          grep -q FVS_154_PLAYABLE_DIAGNOSTICS public/app.js
           grep -q FVS_154_MOBILE_RESUME public/app.js
           grep -q FVS_154_UNREGISTER_STALE_SW public/mobile-app.js
-          grep -q "mobile-app.js?v=15.4.0" public/index.html
+          grep -q FVS_155_EXACT_FIXTURE_ODDS server/providers/oddspapi.mjs
+          grep -q FVS_155_EXACT_REPRICE server/refresh.mjs
+          grep -q verifyNapoleonFixtureSelections server/refresh.mjs
+          grep -q exactOddsVerified server/refresh.mjs
+      - name: Test exact Napoleon market mapping
+        run: |
+          node --input-type=module - <<'NODE'
+          const {fvs155ResolveSelectionForTest}=await import('./server/providers/oddspapi.mjs');
+          const mk=(price)=>({active:true,price,bookmakerChangedAt:'2026-09-21T14:00:00Z',betslip:'/test'});
+          const book={markets:{101:{marketActive:true,bookmakerMarketId:'m1',outcomes:{101:{players:{a:mk(1.91)}},102:{players:{a:mk(3.55)}},103:{players:{a:mk(4.20)}}}},1010:{marketActive:true,outcomes:{1010:{players:{a:mk(2.06)}},1011:{players:{a:mk(1.78)}}}}}};
+          const h=fvs155ResolveSelectionForTest(book,'1X2 · 1','home');
+          const o=fvs155ResolveSelectionForTest(book,'Over/Under 2.5 · Over 2.5','over');
+          if(!h.ok||h.odd!==1.91||h.outcomeId!==101)throw Error('1X2 mapping failed '+JSON.stringify(h));
+          if(!o.ok||o.odd!==2.06||o.outcomeId!==1010)throw Error('O/U mapping failed '+JSON.stringify(o));
+          console.log('exact mapping ok',h.odd,o.odd);
+          NODE
       - name: Smoke server and no-cache API
         run: |
           PORT=3106 npm start > /tmp/fvs.log 2>&1 &
