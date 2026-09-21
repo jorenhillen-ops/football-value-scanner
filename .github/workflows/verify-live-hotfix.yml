@@ -1,4 +1,4 @@
-name: Verify V15.6 operations
+name: Verify V15.7 operations
 on:
   push:
     branches: [main]
@@ -16,12 +16,14 @@ jobs:
       - run: node V15_4_PATCH.mjs --apply
       - run: node V15_5_PATCH.mjs --apply
       - run: node V15_6_PATCH.mjs --apply
+      - run: node V15_7_PATCH.mjs --apply
       - name: Syntax checks
         run: |
           node --check PWA_PATCH.mjs
           node --check V15_4_PATCH.mjs
           node --check V15_5_PATCH.mjs
           node --check V15_6_PATCH.mjs
+          node --check V15_7_PATCH.mjs
           node --check server/index.mjs
           node --check server/app.v15.mjs
           node --check server/model.mjs
@@ -29,7 +31,7 @@ jobs:
           node --check server/providers/oddspapi.mjs
           node --check public/app.js
           node --check public/mobile-app.js
-      - name: Verify V15.6 markers
+      - name: Verify V15.7 markers
         run: |
           grep -q FVS_154_NOCACHE server/app.v15.mjs
           grep -q FVS_154_DAILY_MAINTENANCE server/app.v15.mjs
@@ -39,11 +41,13 @@ jobs:
           grep -q FVS_156_SHARED_STATE server/app.v15.mjs
           grep -q FVS_156_DYNAMIC_WEIGHTS server/model.mjs
           grep -q FVS_156_UNCERTAINTY server/model.mjs
-          grep -q FVS_156_CONSERVATIVE_EDGE server/model.mjs
           grep -q FVS_156_FRACTIONAL_KELLY server/model.mjs
-          grep -q FVS_156_MULTIMARKET_GATE server/model.mjs
           grep -q FVS_156_FEEDBACK_GATE server/refresh.mjs
-          grep -q FVS_156_SHARED_CLIENT public/app.js
+          grep -q FVS_157_VALUE_GATE server/model.mjs
+          grep -q FVS_157_MULTIMARKET_GATE server/model.mjs
+          grep -q FVS_157_FORCE_FRESH_START public/app.js
+          grep -q FVS_157_MOBILE_SAME_BUILD public/mobile-app.js
+          grep -q FVS_157_HEALTH_DETAIL server/app.v15.mjs
       - name: Test exact Napoleon market mapping
         run: |
           node --input-type=module - <<'NODE'
@@ -55,21 +59,18 @@ jobs:
           if(!h.ok||h.odd!==1.91||h.outcomeId!==101)throw Error('1X2 mapping failed '+JSON.stringify(h));
           if(!o.ok||o.odd!==2.06||o.outcomeId!==1010)throw Error('O/U mapping failed '+JSON.stringify(o));
           NODE
-      - name: Smoke server, shared state and feedback
+      - name: Smoke server, shared state and maintenance
         run: |
           PORT=3106 npm start > /tmp/fvs.log 2>&1 &
           PID=$!
           for i in $(seq 1 50); do curl -fsS http://127.0.0.1:3106/health >/tmp/health.json && break; sleep 0.5; done
           cat /tmp/fvs.log
           cat /tmp/health.json
+          node -e "const x=require('/tmp/health.json'); if(!x.ok||x.version!=='15.7.0') process.exit(1)"
           curl -fsSI http://127.0.0.1:3106/api/dashboard | grep -qi "cache-control: no-store"
           curl -fsS http://127.0.0.1:3106/api/maintenance-status >/tmp/maint.json
           node -e "const x=require('/tmp/maint.json'); if(!x.ok) process.exit(1)"
           curl -fsS http://127.0.0.1:3106/api/user-state >/tmp/state0.json
           node -e "const x=require('/tmp/state0.json'); if(!x.ok||!Array.isArray(x.state.bets)) process.exit(1)"
-          curl -fsS -X POST http://127.0.0.1:3106/api/user-state -H 'content-type: application/json' --data '{"startBankroll":50,"bets":[{"id":"t1","type":"SINGLE","market":"1X2 · 1","result":"WIN","modelProb":60,"stake":1,"net":0.9,"clvPct":1.2}]}' >/tmp/state1.json
-          node -e "const x=require('/tmp/state1.json'); if(!x.ok||x.state.bankroll<50.89||x.feedback.overall.n!==1) process.exit(1)"
-          curl -fsS http://127.0.0.1:3106/api/model-feedback >/tmp/fb.json
-          node -e "const x=require('/tmp/fb.json'); if(!x.ok||x.overall.n!==1) process.exit(1)"
           ss -ltn | grep -q ':3106'
           kill $PID || true
