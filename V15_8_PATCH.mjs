@@ -52,10 +52,10 @@ function patchServer(){
   const f=path.join(ROOT,'server','app.v15.mjs');
   let s=read(f);if(!s)return false;
   if(!s.includes('FVS_158_REFRESH_COOLDOWN')){
-    const old="app.post('/api/refresh',async(q,r)=>{\n  if(syncState.running)return r.status(202).json({running:true,message:'Data-sync is al bezig.'});\n  syncState={running:true,startedAt:new Date().toISOString(),finishedAt:null,error:null};";
-    const neu="app.post('/api/refresh',async(q,r)=>{\n  if(syncState.running)return r.status(202).json({running:true,message:'Data-sync is al bezig.'});\n  const fvs158Cached=readJson('dashboard.json',null),fvs158Age=fvs158Cached?.updatedAt?Date.now()-Date.parse(fvs158Cached.updatedAt):Infinity;\n  if(q.body?.force!==true&&fvs158Cached&&fvs158Age>=0&&fvs158Age<2*60*1000)return r.json({...fvs158Cached,refreshReused:true,refreshAgeMs:fvs158Age}); // FVS_158_REFRESH_COOLDOWN\n  syncState={running:true,startedAt:new Date().toISOString(),finishedAt:null,error:null};";
-    if(!s.includes(old))throw new Error('V15.8 refresh endpoint anchor ontbreekt');
-    s=s.replace(old,neu);
+    const anchor="  if(syncState.running)return r.status(202).json({running:true,message:'Data-sync is al bezig.'});";
+    if(!s.includes(anchor))throw new Error('V15.8 refresh endpoint anchor ontbreekt');
+    const addition=`${anchor}\n  const fvs158Cached=readJson('dashboard.json',null),fvs158Age=fvs158Cached?.updatedAt?Date.now()-Date.parse(fvs158Cached.updatedAt):Infinity;\n  if(q.body?.force!==true&&fvs158Cached&&fvs158Age>=0&&fvs158Age<2*60*1000)return r.json({...fvs158Cached,refreshReused:true,refreshAgeMs:fvs158Age}); // FVS_158_REFRESH_COOLDOWN`;
+    s=s.replace(anchor,addition);
   }
   s=s.replace("version:'15.7.0'","version:'15.8.0'");
   write(f,s);return true;
@@ -64,7 +64,7 @@ function patchServer(){
 function patchClient(){
   const f=path.join(ROOT,'public','app.js');let s=read(f);if(!s)return false;
   if(!s.includes('FVS_158_RATE_LIMIT_COPY')){
-    s+=`\n// FVS_158_RATE_LIMIT_COPY: tijdelijke feedbegrenzing is geen kapotte API-key.\n(()=>{\n  const oldToast=window.toast;\n  window.fvs158FriendlyError=function(msg=''){const z=String(msg||'');return /rate limit|429/i.test(z)?'OddsPapi is tijdelijk begrensd. De scanner wacht automatisch en probeert opnieuw; klik niet herhaaldelijk op vernieuwen.':z};\n})(); // FVS_158_RATE_LIMIT_COPY\n`;
+    s+=`\n// FVS_158_RATE_LIMIT_COPY: tijdelijke feedbegrenzing is geen kapotte API-key.\n(()=>{\n  window.fvs158FriendlyError=function(msg=''){const z=String(msg||'');return /rate limit|429/i.test(z)?'OddsPapi is tijdelijk begrensd. De scanner wacht automatisch en probeert opnieuw; klik niet herhaaldelijk op vernieuwen.':z};\n})(); // FVS_158_RATE_LIMIT_COPY\n`;
   }
   write(f,s);return true;
 }
