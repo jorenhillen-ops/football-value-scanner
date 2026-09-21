@@ -1,11 +1,13 @@
 {
-  "name": "football-value-scanner-v15-3-iphone-web-app",
-  "version": "15.3.0",
+  "name": "football-value-scanner-v15-5-exact-odds",
+  "version": "15.5.0",
   "type": "module",
   "scripts": {
     "start": "node server/index.mjs",
     "prepare:v15": "node BOOTSTRAP_V15.mjs --prepare --force",
-    "apply:pwa": "node PWA_PATCH.mjs --apply"
+    "apply:pwa": "node PWA_PATCH.mjs --apply",
+    "apply:v15.4": "node V15_4_PATCH.mjs --apply",
+    "apply:v15.5": "node V15_5_PATCH.mjs --apply"
   },
   "dependencies": {
     "express": "^5.1.0"
