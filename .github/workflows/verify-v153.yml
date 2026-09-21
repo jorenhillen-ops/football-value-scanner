@@ -1,0 +1,47 @@
+name: Verify V15.3 iPhone Web App
+on:
+  push:
+    branches: [v15-3-iphone]
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Prepare core runtime
+        run: node BOOTSTRAP_V15.mjs --prepare --force
+      - name: Apply iPhone layer
+        run: node PWA_PATCH.mjs --apply
+      - name: Verify mobile assets
+        run: |
+          test -f public/manifest.webmanifest
+          test -f public/mobile-app.css
+          test -f public/mobile-app.js
+          test -f public/app-icon.svg
+          test -f public/sw.js
+          grep -q 'V15.3 IPHONE APP' public/index.html
+          grep -q 'apple-mobile-web-app-capable' public/index.html
+          grep -q 'manifest.webmanifest' public/index.html
+      - name: Syntax checks
+        run: |
+          node --check server/index.mjs
+          node --check PWA_PATCH.mjs
+          node --check public/mobile-app.js
+      - name: Smoke-test server
+        run: |
+          PORT=3106 npm start >server.log 2>&1 &
+          PID=$!
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:3106/health >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:3106/health
+          curl -fsS http://127.0.0.1:3106/manifest.webmanifest | grep -q 'Football Value Scanner'
+          curl -fsS http://127.0.0.1:3106/mobile-app.js | grep -q 'fvs-mobilebar'
+          ss -lnt | grep ':3106' | grep -E '(0.0.0.0|\[::\]|\*:3106|:::3106)' || (cat server.log && exit 1)
+          kill $PID || true
