@@ -1,0 +1,35 @@
+name: Verify live freshness hotfix
+on:
+  push:
+    branches: [main]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: node BOOTSTRAP_V15.mjs --prepare --force
+      - run: node PWA_PATCH.mjs --apply
+      - name: Syntax checks
+        run: |
+          node --check PWA_PATCH.mjs
+          node --check server/app.v15.mjs
+          node --check server/refresh.mjs
+          node --check public/app.js
+      - name: Verify stale-filter patches exist
+        run: |
+          grep -q FVS_1531_FRESHNESS server/app.v15.mjs
+          grep -q FVS_1531_ROW_FILTER server/refresh.mjs
+          grep -q FVS_1531_LIVE_REFRESH public/app.js
+      - name: Smoke server
+        run: |
+          PORT=3106 HOST=127.0.0.1 npm start > /tmp/fvs.log 2>&1 &
+          PID=$!
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:3106/health >/tmp/health.json && break; sleep 0.5; done
+          cat /tmp/health.json
+          curl -fsS http://127.0.0.1:3106/api/dashboard >/tmp/dashboard.json
+          node -e "const x=require('/tmp/dashboard.json'); if(!Array.isArray(x.matches)) process.exit(1); console.log('matches',x.matches.length,'date',x.date)"
+          kill $PID || true
