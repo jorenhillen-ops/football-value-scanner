@@ -12,11 +12,9 @@ jobs:
           node-version: '22'
       - name: Prepare runtime
         run: node BOOTSTRAP_V15.mjs --prepare --force
-      - name: Show exact refresh code
+      - name: Show server listen configuration
         run: |
-          echo '--- refresh.mjs ---'
-          sed -n '1,360p' server/refresh.mjs
-          echo '--- refresh endpoint ---'
-          sed -n '245,275p' server/app.v15.mjs
-          echo '--- OddsPapi day fetch ---'
-          sed -n '255,370p' server/providers/oddspapi.mjs
+          echo '--- listen configuration ---'
+          grep -RniE "listen\(|HOST|0\.0\.0\.0|localhost|127\.0\.0\.1" server/app.v15.mjs server/*.mjs | tail -n 120 || true
+          echo '--- app tail ---'
+          tail -n 50 server/app.v15.mjs
