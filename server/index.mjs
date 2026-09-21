@@ -9,7 +9,11 @@ import {applyV157Patch} from '../V15_7_PATCH.mjs';
 
 const here=path.dirname(fileURLToPath(import.meta.url));
 try{
-  const result=prepareV15Runtime();
+  // Always rebuild the generated V15.2 runtime before applying the incremental
+  // layers. This makes every start deterministic and prevents a later patch
+  // (for example V15.7) from removing an anchor that an earlier patch (V15.6)
+  // expects when the scanner is started again. data/ is never touched here.
+  const result=prepareV15Runtime({force:true});
   if(result.restored)console.log(`V15.2 core runtime hersteld (${result.written} bestanden).`);
   applyPwaPatch();
   applyV154Patch();
