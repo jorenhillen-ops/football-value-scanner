@@ -52,10 +52,10 @@ function patchServer(){
   const f=path.join(ROOT,'server','app.v15.mjs');
   let s=read(f);if(!s)return false;
   if(!s.includes('FVS_158_REFRESH_COOLDOWN')){
-    const anchor="  if(syncState.running)return r.status(202).json({running:true,message:'Data-sync is al bezig.'});";
-    if(!s.includes(anchor))throw new Error('V15.8 refresh endpoint anchor ontbreekt');
-    const addition=`${anchor}\n  const fvs158Cached=readJson('dashboard.json',null),fvs158Age=fvs158Cached?.updatedAt?Date.now()-Date.parse(fvs158Cached.updatedAt):Infinity;\n  if(q.body?.force!==true&&fvs158Cached&&fvs158Age>=0&&fvs158Age<2*60*1000)return r.json({...fvs158Cached,refreshReused:true,refreshAgeMs:fvs158Age}); // FVS_158_REFRESH_COOLDOWN`;
-    s=s.replace(anchor,addition);
+    const anchor='const app=express();';
+    if(!s.includes(anchor))throw new Error('V15.8 express anchor ontbreekt');
+    const middleware=`${anchor}\n// FVS_158_REFRESH_COOLDOWN: desktop en iPhone delen één verse dashboard-snapshot zodat dubbel openen geen extra OddsPapi-burst veroorzaakt.\napp.use('/api/refresh',(q,r,next)=>{\n  if(q.method!=='POST')return next();\n  const cached=readJson('dashboard.json',null),age=cached?.updatedAt?Date.now()-Date.parse(cached.updatedAt):Infinity;\n  if(q.query?.force!=='1'&&cached&&age>=0&&age<2*60*1000)return r.json({...cached,refreshReused:true,refreshAgeMs:age});\n  next();\n});`;
+    s=s.replace(anchor,middleware);
   }
   s=s.replace("version:'15.7.0'","version:'15.8.0'");
   write(f,s);return true;
