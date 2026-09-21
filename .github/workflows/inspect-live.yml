@@ -12,9 +12,11 @@ jobs:
           node-version: '22'
       - name: Prepare runtime
         run: node BOOTSTRAP_V15.mjs --prepare --force
-      - name: Show refresh and fixture endpoints
+      - name: Show exact refresh code
         run: |
-          echo '--- server routes ---'
-          grep -RniE "app\.(get|post)|router\.(get|post)|refresh|live|fixture|odds" server/app.v15.mjs server/refresh.mjs server/providers/*.mjs | head -n 500 || true
-          echo '--- client refresh hooks ---'
-          grep -RniE "refresh|live|fixture|odds|today|vandaag|fetch\(" public/app.js public/index.html | head -n 800 || true
+          echo '--- refresh.mjs ---'
+          sed -n '1,360p' server/refresh.mjs
+          echo '--- refresh endpoint ---'
+          sed -n '245,275p' server/app.v15.mjs
+          echo '--- OddsPapi day fetch ---'
+          sed -n '255,370p' server/providers/oddspapi.mjs
