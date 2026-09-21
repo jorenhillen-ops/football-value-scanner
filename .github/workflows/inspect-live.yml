@@ -12,11 +12,14 @@ jobs:
           node-version: '22'
       - name: Prepare runtime
         run: node BOOTSTRAP_V15.mjs --prepare --force
-      - name: Inspect odds/model internals
+      - name: Inspect adaptive model and persistence anchors
         run: |
-          echo '--- OddsPapi market definitions + verify ---'
-          sed -n '1,270p' server/providers/oddspapi.mjs
-          echo '--- model evaluation core ---'
-          grep -nE "evaluate1x2|evaluateMarketCandidate|VOORWAARDELIJK|BET|stakePct|value" server/model.mjs | head -n 260 || true
-          echo '--- refresh row build ---'
-          sed -n '205,320p' server/refresh.mjs
+          echo '--- model adaptive core ---'
+          grep -nE "buildAdaptivePrediction|adaptive|component|weights|calibr|Brier|Log Loss|evaluate1x2|evaluateHistoricalMarketList|stakePct|VOORWAARDELIJK|status='BET'|status = 'BET'" server/model.mjs | head -n 500 || true
+          echo '--- model full relevant ranges ---'
+          sed -n '1,420p' server/model.mjs
+          echo '--- client local state ---'
+          grep -nE "localStorage|bankroll|played|B=|let B|save|load" public/app.js | head -n 400 || true
+          sed -n '1,260p' public/app.js
+          echo '--- app routes around bets/settlement ---'
+          sed -n '300,460p' server/app.v15.mjs
