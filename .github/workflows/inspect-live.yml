@@ -12,13 +12,11 @@ jobs:
           node-version: '22'
       - name: Prepare runtime
         run: node BOOTSTRAP_V15.mjs --prepare --force
-      - name: Inspect data and playable logic
+      - name: Inspect odds/model internals
         run: |
-          echo '--- OddsPapi filters ---'
-          sed -n '1,95p' server/providers/oddspapi.mjs
-          echo '--- model evaluation ---'
-          grep -nE "function evaluate1x2|export function evaluate1x2|status.*BET|VOORWAARDELIJK|stakePct|MIN" server/model.mjs | head -n 160 || true
-          echo '--- app club sync ---'
-          sed -n '105,195p' server/app.v15.mjs
-          echo '--- client playable render ---'
-          grep -nE "playable|Speelbare|actionable|opportunities|BET|VOORWAARDELIJK" public/app.js | head -n 240 || true
+          echo '--- OddsPapi market definitions + verify ---'
+          sed -n '1,270p' server/providers/oddspapi.mjs
+          echo '--- model evaluation core ---'
+          grep -nE "evaluate1x2|evaluateMarketCandidate|VOORWAARDELIJK|BET|stakePct|value" server/model.mjs | head -n 260 || true
+          echo '--- refresh row build ---'
+          sed -n '205,320p' server/refresh.mjs
