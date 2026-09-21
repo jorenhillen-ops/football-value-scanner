@@ -12,14 +12,20 @@ jobs:
           node-version: '22'
       - name: Prepare runtime
         run: node BOOTSTRAP_V15.mjs --prepare --force
-      - name: Inspect adaptive model and persistence anchors
+      - name: Apply current patches
         run: |
-          echo '--- model adaptive core ---'
-          grep -nE "buildAdaptivePrediction|adaptive|component|weights|calibr|Brier|Log Loss|evaluate1x2|evaluateHistoricalMarketList|stakePct|VOORWAARDELIJK|status='BET'|status = 'BET'" server/model.mjs | head -n 500 || true
-          echo '--- model full relevant ranges ---'
-          sed -n '1,420p' server/model.mjs
-          echo '--- client local state ---'
-          grep -nE "localStorage|bankroll|played|B=|let B|save|load" public/app.js | head -n 400 || true
-          sed -n '1,260p' public/app.js
-          echo '--- app routes around bets/settlement ---'
-          sed -n '300,460p' server/app.v15.mjs
+          node PWA_PATCH.mjs --apply
+          node V15_4_PATCH.mjs --apply
+          node V15_5_PATCH.mjs --apply
+          node V15_6_PATCH.mjs --apply
+          node V15_7_PATCH.mjs --apply
+      - name: Inspect OddsPapi throttling and maintenance
+        run: |
+          echo '--- oddspapi request core ---'
+          sed -n '1,120p' server/providers/oddspapi.mjs
+          echo '--- oddspapi day fetch ---'
+          sed -n '255,390p' server/providers/oddspapi.mjs
+          echo '--- maintenance/server schedule ---'
+          grep -nE "FVS_154_DAILY_MAINTENANCE|fvsRunDailyMaintenance|setInterval|app.listen|/api/refresh|maintenance-now" server/app.v15.mjs | head -n 200 || true
+          echo '--- refresh freshness/exact ---'
+          grep -nE "FVS_155_EXACT_REPRICE|fetchNapoleonDay|stale|localDateISO|actionable|maxFixtures" server/refresh.mjs | head -n 240 || true
