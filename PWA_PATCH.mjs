@@ -4,7 +4,7 @@ import {fileURLToPath} from 'node:url';
 
 const ROOT=path.dirname(fileURLToPath(import.meta.url));
 const PUB=path.join(ROOT,'public');
-const VERSION='15.3.0';
+const VERSION='15.3.1';
 const mark='<!-- V15.3 IPHONE APP -->';
 
 const mobileCss=`
@@ -33,7 +33,6 @@ const mobileCss=`
 
 const mobileJs=`(()=>{
   const label=e=>(e.innerText||e.textContent||'').trim().replace(/\\s+/g,' ');
-  const visible=e=>!!(e.offsetWidth||e.offsetHeight||e.getClientRects().length);
   function navCandidates(){
     const nodes=[...document.querySelectorAll('aside a,aside button,.sidebar a,.sidebar button,.side-nav a,.side-nav button,nav a,nav button')];
     const seen=new Set();
@@ -56,14 +55,49 @@ const mobileJs=`(()=>{
 
 const manifest=JSON.stringify({name:'Football Value Scanner',short_name:'Value Scanner',start_url:'/',scope:'/',display:'standalone',background_color:'#0a1018',theme_color:'#0a1018',description:'Football value betting dashboard',icons:[{src:'/app-icon.svg',sizes:'any',type:'image/svg+xml',purpose:'any maskable'}]},null,2);
 const icon=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="108" fill="#0a1018"/><circle cx="256" cy="256" r="170" fill="none" stroke="#fff" stroke-width="18"/><path d="M256 132l58 42-22 68h-72l-22-68 58-42zm-128 98l70 12 22 68-55 46-61-40 24-86zm256 0l24 86-61 40-55-46 22-68 70-12zM184 366l36-56h72l36 56-72 42-72-42z" fill="#fff"/></svg>`;
-const sw=`const C='fvs-v15.3';self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll(['/','/mobile-app.css','/mobile-app.js','/manifest.webmanifest','/app-icon.svg']).catch(()=>{}))));self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x))))));self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{const x=r.clone();caches.open(C).then(c=>c.put(e.request,x)).catch(()=>{});return r}).catch(()=>caches.match(e.request)))})`;
+const sw=`const C='fvs-v15.3.1';self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll(['/','/mobile-app.css','/mobile-app.js','/manifest.webmanifest','/app-icon.svg']).catch(()=>{}))));self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x))))));self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request,{cache:'no-store'}).then(r=>{const x=r.clone();caches.open(C).then(c=>c.put(e.request,x)).catch(()=>{});return r}).catch(()=>caches.match(e.request)))})`;
 
 function write(name,content){fs.mkdirSync(PUB,{recursive:true});fs.writeFileSync(path.join(PUB,name),content,'utf8')}
-function injectHtml(){const f=path.join(PUB,'index.html');if(!fs.existsSync(f))return false;let s=fs.readFileSync(f,'utf8');if(s.includes(mark))return true;const head=`${mark}\n<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n<meta name="theme-color" content="#0a1018">\n<meta name="apple-mobile-web-app-capable" content="yes">\n<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">\n<meta name="apple-mobile-web-app-title" content="Value Scanner">\n<link rel="manifest" href="/manifest.webmanifest">\n<link rel="icon" href="/app-icon.svg" type="image/svg+xml">\n<link rel="stylesheet" href="/mobile-app.css">`;
-  s=s.includes('</head>')?s.replace('</head>',head+'\n</head>'):head+s;
-  const script='<script src="/mobile-app.js" defer></script>';
-  s=s.includes('</body>')?s=s.replace('</body>',script+'\n</body>'):s+=script;
-  fs.writeFileSync(f,s,'utf8');return true;
+function injectHtml(){const f=path.join(PUB,'index.html');if(!fs.existsSync(f))return false;let s=fs.readFileSync(f,'utf8');if(!s.includes(mark)){const head=`${mark}\n<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n<meta name="theme-color" content="#0a1018">\n<meta name="apple-mobile-web-app-capable" content="yes">\n<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">\n<meta name="apple-mobile-web-app-title" content="Value Scanner">\n<link rel="manifest" href="/manifest.webmanifest">\n<link rel="icon" href="/app-icon.svg" type="image/svg+xml">\n<link rel="stylesheet" href="/mobile-app.css">`;s=s.includes('</head>')?s.replace('</head>',head+'\n</head>'):head+s;const script='<script src="/mobile-app.js" defer></script>';s=s.includes('</body>')?s=s.replace('</body>',script+'\n</body>'):s+=script;fs.writeFileSync(f,s,'utf8');}return true}
+
+function patchFreshness(){
+  const appFile=path.join(ROOT,'server','app.v15.mjs');
+  if(fs.existsSync(appFile)){
+    let s=fs.readFileSync(appFile,'utf8');
+    if(!s.includes('FVS_1531_FRESHNESS')){
+      const old="app.get('/api/dashboard',(q,r)=>r.json(readJson('dashboard.json',{updatedAt:null,live:false,matches:[]})));";
+      const helper=`// FVS_1531_FRESHNESS\nfunction fvsBrusselsDateKey(v=new Date()){const p=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Brussels',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(v),g=t=>p.find(x=>x.type===t)?.value;return \`${'${g(\'year\')}-${g(\'month\')}-${g(\'day\')}'}\`}\nfunction fvsFreshDashboard(dash={}){const now=Date.now(),today=fvsBrusselsDateKey(),src=Array.isArray(dash.matches)?dash.matches:[];const matches=src.filter(m=>{const t=Date.parse(m?.startTime);if(!Number.isFinite(t))return false;return fvsBrusselsDateKey(new Date(t))>=today&&t>now-10*60*1000});return {...dash,date:today,matches,live:Boolean(matches.length),staleFiltered:Math.max(0,src.length-matches.length)}}\napp.get('/api/dashboard',(q,r)=>r.json(fvsFreshDashboard(readJson('dashboard.json',{updatedAt:null,live:false,matches:[]}))));`;
+      if(s.includes(old))s=s.replace(old,helper);
+      const busy="if(syncState.running)return r.status(202).json({running:true,message:'Data-sync is al bezig.'});";
+      const busyNew="if(syncState.running){const age=Date.now()-new Date(syncState.startedAt||0).getTime();if(age<10*60*1000)return r.status(202).json({running:true,message:'Data-sync is al bezig.',dashboard:fvsFreshDashboard(readJson('dashboard.json',{updatedAt:null,live:false,matches:[]}))});syncState={...syncState,running:false,error:'Vastgelopen oude sync automatisch vrijgegeven.'};}";
+      if(s.includes(busy))s=s.replace(busy,busyNew);
+      const send='r.json(dash);';
+      if(s.includes(send))s=s.replace(send,'r.json(fvsFreshDashboard(dash));');
+      fs.writeFileSync(appFile,s,'utf8');
+    }
+  }
+  const refreshFile=path.join(ROOT,'server','refresh.mjs');
+  if(fs.existsSync(refreshFile)){
+    let s=fs.readFileSync(refreshFile,'utf8');
+    if(!s.includes('FVS_1531_ROW_FILTER')){
+      s=s.replace('const rows=base.map(f=>{','let rows=base.map(f=>{');
+      const sortLine="  }).sort((a,b)=>String(a.startTime).localeCompare(String(b.startTime)));";
+      const add=`${sortLine}\n  // FVS_1531_ROW_FILTER: nooit oude pre-match bets uit een vorige dag tonen.\n  {const now=Date.now(),today=localDateISO();rows=rows.filter(m=>{const t=Date.parse(m?.startTime);if(!Number.isFinite(t))return false;const p=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Brussels',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(t)),g=x=>p.find(y=>y.type===x)?.value,key=\`${'${g(\'year\')}-${g(\'month\')}-${g(\'day\')}'}\`;return key>=today&&t>now-10*60*1000});}`;
+      if(s.includes(sortLine))s=s.replace(sortLine,add);
+      fs.writeFileSync(refreshFile,s,'utf8');
+    }
+  }
+  const jsFile=path.join(PUB,'app.js');
+  if(fs.existsSync(jsFile)){
+    let s=fs.readFileSync(jsFile,'utf8');
+    if(!s.includes('FVS_1531_LIVE_REFRESH')){
+      const re=/async function liveRefresh\(\)\{[\s\S]*?\n\}/;
+      const repl=`async function liveRefresh(){\n  // FVS_1531_LIVE_REFRESH\n  $('refresh').disabled=true;$('refresh').textContent='⏳ Ophalen…';\n  try{\n    let r=await fetch('/api/refresh?'+Date.now(),{method:'POST',headers:{'content-type':'application/json','cache-control':'no-cache'},cache:'no-store',body:JSON.stringify({})});\n    let x=await r.json();\n    if(r.status===202&&x.running){\n      toast('Data-sync loopt al. Wachten op de nieuwste wedstrijden…');\n      for(let i=0;i<90;i++){await new Promise(res=>setTimeout(res,1000));const sr=await fetch('/api/sync-status?'+Date.now(),{cache:'no-store'}),st=await sr.json();if(!st.running)break}\n      const dr=await fetch('/api/dashboard?'+Date.now(),{cache:'no-store'});if(!dr.ok)throw Error('Dashboard kon niet vernieuwd worden');D=await dr.json();\n    }else{if(!r.ok)throw Error(x.error||'Refresh mislukt');D=x}\n    render();loadIntelligence(true);toast('Live data vernieuwd · oude wedstrijden verwijderd');\n  }catch(e){toast(e.message||'Live refresh mislukt')}finally{$('refresh').disabled=false;$('refresh').textContent='↻ Live data vernieuwen'}\n}`;
+      if(re.test(s))s=s.replace(re,repl);
+      fs.writeFileSync(jsFile,s,'utf8');
+    }
+  }
 }
-export function applyPwaPatch(){write('mobile-app.css',mobileCss);write('mobile-app.js',mobileJs);write('manifest.webmanifest',manifest);write('app-icon.svg',icon);write('sw.js',sw);injectHtml();return {ok:true,version:VERSION}}
+
+export function applyPwaPatch(){write('mobile-app.css',mobileCss);write('mobile-app.js',mobileJs);write('manifest.webmanifest',manifest);write('app-icon.svg',icon);write('sw.js',sw);injectHtml();patchFreshness();return {ok:true,version:VERSION}}
 if(process.argv.includes('--apply'))console.log(JSON.stringify(applyPwaPatch(),null,2));
