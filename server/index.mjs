@@ -5,6 +5,7 @@ import {applyPwaPatch} from '../PWA_PATCH.mjs';
 import {applyV154Patch} from '../V15_4_PATCH.mjs';
 import {applyV155Patch} from '../V15_5_PATCH.mjs';
 import {applyV156Patch} from '../V15_6_PATCH.mjs';
+import {applyV157Patch} from '../V15_7_PATCH.mjs';
 
 const here=path.dirname(fileURLToPath(import.meta.url));
 try{
@@ -13,11 +14,12 @@ try{
   applyPwaPatch();
   applyV154Patch();
   applyV155Patch();
-  const v156=applyV156Patch();
-  console.log(`Football Value Scanner ${v156.version} starten...`);
-  await import(pathToFileURL(path.join(here,'app.v15.mjs')).href+'?runtime='+v156.version);
+  applyV156Patch();
+  const v157=applyV157Patch();
+  console.log(`Football Value Scanner ${v157.version} starten...`);
+  await import(pathToFileURL(path.join(here,'app.v15.mjs')).href+'?runtime='+v157.version);
 }catch(err){
-  console.error('\nFOUT BIJ STARTEN V15.6');
+  console.error('\nFOUT BIJ STARTEN V15.7');
   console.error(err?.stack||err);
   console.error('\nVoer CHECK_UPDATE.bat uit en start daarna opnieuw. Lokale data/API-keys worden niet gewist.');
   process.exitCode=1;
