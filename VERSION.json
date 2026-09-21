@@ -1,12 +1,13 @@
 {
-  "version": "15.3.1",
+  "version": "15.4.0",
   "channel": "main",
   "repository": "jorenhillen-ops/football-value-scanner",
   "model": "V15 Adaptive Player Engine",
-  "ui": "multipage + iPhone web app",
-  "clubData": "Sportmonks ID catalog",
+  "ui": "same multipage data on desktop + iPhone responsive shell",
+  "clubData": "Sportmonks ID catalog + automatic daily squad refresh",
   "settlement": "OddsPapi + Sportmonks score fallback + manual",
-  "mobile": "PWA shell + iOS home screen + responsive bottom navigation",
-  "freshness": "stale fixture filter + robust live refresh polling",
-  "runtime": "verified V15.2 core + V15.3.1 mobile/live layer"
+  "mobile": "iOS home screen + LAN installer + cache-free live resume",
+  "freshness": "stale fixture filter + robust live refresh + no-store API/assets",
+  "maintenance": "automatic club/squad refresh when local server is running",
+  "runtime": "verified V15.2 core + V15.4 operational layer"
 }
