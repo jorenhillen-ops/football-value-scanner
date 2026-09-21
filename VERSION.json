@@ -1,5 +1,5 @@
 {
-  "version": "15.4.0",
+  "version": "15.5.0",
   "channel": "main",
   "repository": "jorenhillen-ops/football-value-scanner",
   "model": "V15 Adaptive Player Engine",
@@ -9,5 +9,6 @@
   "mobile": "iOS home screen + LAN installer + cache-free live resume",
   "freshness": "stale fixture filter + robust live refresh + no-store API/assets",
   "maintenance": "automatic club/squad refresh when local server is running",
-  "runtime": "verified V15.2 core + V15.4 operational layer"
+  "odds": "direct exact Napoleon /odds verification for every playable fixture before publication",
+  "runtime": "verified V15.2 core + V15.4 operations + V15.5 exact odds layer"
 }
