@@ -1,5 +1,5 @@
 {
-  "version": "15.3.0",
+  "version": "15.3.1",
   "channel": "main",
   "repository": "jorenhillen-ops/football-value-scanner",
   "model": "V15 Adaptive Player Engine",
@@ -7,5 +7,6 @@
   "clubData": "Sportmonks ID catalog",
   "settlement": "OddsPapi + Sportmonks score fallback + manual",
   "mobile": "PWA shell + iOS home screen + responsive bottom navigation",
-  "runtime": "verified V15.2 core + V15.3 mobile layer"
+  "freshness": "stale fixture filter + robust live refresh polling",
+  "runtime": "verified V15.2 core + V15.3.1 mobile/live layer"
 }
