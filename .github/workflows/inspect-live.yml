@@ -12,9 +12,13 @@ jobs:
           node-version: '22'
       - name: Prepare runtime
         run: node BOOTSTRAP_V15.mjs --prepare --force
-      - name: Show server listen configuration
+      - name: Inspect data and playable logic
         run: |
-          echo '--- listen configuration ---'
-          grep -RniE "listen\(|HOST|0\.0\.0\.0|localhost|127\.0\.0\.1" server/app.v15.mjs server/*.mjs | tail -n 120 || true
-          echo '--- app tail ---'
-          tail -n 50 server/app.v15.mjs
+          echo '--- OddsPapi filters ---'
+          sed -n '1,95p' server/providers/oddspapi.mjs
+          echo '--- model evaluation ---'
+          grep -nE "function evaluate1x2|export function evaluate1x2|status.*BET|VOORWAARDELIJK|stakePct|MIN" server/model.mjs | head -n 160 || true
+          echo '--- app club sync ---'
+          sed -n '105,195p' server/app.v15.mjs
+          echo '--- client playable render ---'
+          grep -nE "playable|Speelbare|actionable|opportunities|BET|VOORWAARDELIJK" public/app.js | head -n 240 || true
